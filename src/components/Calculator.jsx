@@ -5,7 +5,8 @@ export default function Calculator() {
   const [expression, setExpression] = useState("");
   const [result, setResult] = useState("");
   const [history, setHistory] = useState([]);
-  const [mode, setMode] = useState("standard"); // standard | scientific | history
+  const [mode, setMode] = useState("standard");
+  const [loading, setLoading] = useState(false);
 
   const handleClick = (value) => {
     if (value === "C") {
@@ -23,35 +24,77 @@ export default function Calculator() {
   const calculate = async () => {
     if (!expression) return;
     try {
+      setLoading(true);
+      setResult(""); // Clear old result before new calc
       const response = await fetch(
-        `https://smart-calculator-backend-nlwc.onrender.com/v4?expr=${encodeURIComponent(expression)}`
+        `https://smart-calculator-backend-nlwc.onrender.com/v4?expr=${encodeURIComponent(
+          expression
+        )}`
       );
-      const data = await response.text();
-      setResult(data);
-      setHistory((prev) => [{ expr: expression, res: data }, ...prev.slice(0, 9)]);
-    } catch {
+      const data = await response.json();
+      setResult(data.result);
+      setHistory([{ exp: expression, res: data.result }, ...history]);
+    } catch (error) {
       setResult("Error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const buttonsStandard = [
-    "7", "8", "9", "/",
-    "4", "5", "6", "*",
-    "1", "2", "3", "-",
-    "0", ".", "C", "+",
-    "=", "DEL"
+  const clearHistory = () => setHistory([]);
+
+  const standardButtons = [
+    "7",
+    "8",
+    "9",
+    "/",
+    "4",
+    "5",
+    "6",
+    "*",
+    "1",
+    "2",
+    "3",
+    "-",
+    "0",
+    ".",
+    "C",
+    "+",
+    "=",
+    "DEL",
   ];
 
-  const buttonsScientific = [
-    "sin(", "cos(", "tan(", "log(", "sqrt(",
-    ...buttonsStandard
+  const scientificButtons = [
+    "sin(",
+    "cos(",
+    "tan(",
+    "log(",
+    "sqrt(",
+    "7",
+    "8",
+    "9",
+    "/",
+    "4",
+    "5",
+    "6",
+    "*",
+    "1",
+    "2",
+    "3",
+    "-",
+    "0",
+    ".",
+    "+",
+    "=",
+    "DEL",
+    "C",
   ];
 
-  const getButtons = () => (mode === "scientific" ? buttonsScientific : buttonsStandard);
+  const buttons = mode === "scientific" ? scientificButtons : standardButtons;
 
   return (
-    <div className="calculator-wrapper">
-      <div className="mode-tabs">
+    <div className="calculator-container">
+      <div className="mode-switch">
         {["standard", "scientific", "history"].map((m) => (
           <button
             key={m}
@@ -64,14 +107,20 @@ export default function Calculator() {
       </div>
 
       {mode !== "history" ? (
-        <div className="calculator">
+        <>
           <div className="display">
             <div className="expression">{expression || "0"}</div>
-            <div className="result">{result ? `= ${result}` : ""}</div>
+            <div className="result">
+              {loading ? (
+                <div className="loader">Calculating...</div>
+              ) : (
+                result && <span className="final-result">{result}</span>
+              )}
+            </div>
           </div>
 
-          <div className="buttons">
-            {getButtons().map((btn, index) => (
+          <div className="buttons-grid">
+            {buttons.map((btn, index) => (
               <button
                 key={index}
                 onClick={() => handleClick(btn)}
@@ -81,29 +130,27 @@ export default function Calculator() {
               </button>
             ))}
           </div>
-        </div>
+        </>
       ) : (
         <div className="history-panel">
           <div className="history-header">
             <h3>🧾 History</h3>
-            {history.length > 0 && (
-              <button className="clear-btn" onClick={() => setHistory([])}>
-                Clear
-              </button>
-            )}
+            <button className="clear-btn" onClick={clearHistory}>
+              Clear
+            </button>
           </div>
-          <div className="history-list">
-            {history.length === 0 ? (
-              <p>No calculations yet</p>
-            ) : (
-              history.map((item, idx) => (
-                <div key={idx} className="history-item">
-                  <span>{item.expr}</span>
-                  <span>= {item.res}</span>
-                </div>
-              ))
-            )}
-          </div>
+          {history.length === 0 ? (
+            <p className="no-history">No calculations yet</p>
+          ) : (
+            <ul className="history-list">
+              {history.map((h, i) => (
+                <li key={i}>
+                  <span>{h.exp}</span>
+                  <span>= {h.res}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>
