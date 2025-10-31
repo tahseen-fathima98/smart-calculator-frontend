@@ -17,7 +17,7 @@ export default function Calculator() {
 
   const calculate = async () => {
     try {
-      const response = await fetch(`https://api.mathjs.org/v4/?expr=${encodeURIComponent(expression)}`);
+      const response = await fetch(`https://smart-calculator-backend-nlwc.onrender.com/v4?expr=${encodeURIComponent(expression)}`);
       const text = await response.text();
       setResult(text);
     } catch (error) {
