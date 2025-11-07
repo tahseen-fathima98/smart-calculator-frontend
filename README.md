@@ -19,3 +19,6 @@ npm run dev
 Then open http://localhost:5173
 
 Enjoy! 💫
+
+Added Holopin badges to README
+[![An image of @fugi98's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/fugi98)](https://holopin.io/@fugi98)
